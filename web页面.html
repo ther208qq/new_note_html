@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NoteWeb</title>
+
+    <style>
+
+        body{
+            margin:0;
+        }
+
+        .header{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            background-color:#f0f0f0;
+            padding:10px 20px;
+        }
+
+        .header h1{
+            margin:0;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .header a{
+            text-decoration: none;
+            color:#333;
+            font-size: 16px;
+        }
+
+        .direction {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .direction input{
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+
+        .direction button{
+            padding: 8px 16px;
+            margin: 0 5px;
+            cursor: pointer;
+        }
+
+        .direction th, .direction td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        #app{
+            width: 80%;
+            margin: 0 auto;
+        }
+
+    </style>
+
+
+</head>
+
+<body>
+    <div id="app">
+
+        <div class="header">
+            <h1>web网页</h1>
+            <a href="#">点击退出</a>
+        </div>
+
+        <form>
+            <input type="text" v-model="searchForm.id"/>
+            <button type="button" @click="show">展示所有笔记</button>
+            <button type="button" @click="clear">清空所有笔记</button>
+        </form>
+
+        <table class="direction">
+            <thead>
+                <tr>
+                    <th>编号</th>
+                    <th>内容</th>
+                </tr>
+            </thead>
+            
+            <tbody>
+                <tr v-for="note in noteList" :key="note.id">
+                    <td>{{ note.id }}</td>
+                    <td>{{ note.content }}</td>
+                    <td class="btn-group">
+                        <button class="edit">编辑</button>
+                        <button class="delete">删除</button>
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+
+    </div>
+
+
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script type="module">
+        import { createApp } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js';
+
+        createApp({
+
+            data(){
+
+                return {
+                    searchForm:{
+                        id:'',
+                        content:''
+                    },
+                    noteList:[]
+
+                }
+            },
+
+            methods:{
+
+                async show(){
+    
+                    const result = await axios.get(`http://localhost:8080/note/showNote?id=${this.searchForm.id}&content=${this.searchForm.content}`);
+                    this.noteList = result.data;
+                },
+
+                clear(){
+                    this.searchForm = {
+                        id:'',
+                        content:''
+                    }
+                    this.show();
+                },
+
+            },
+            mounted(){
+                this.show();
+            }
+        }).mount('#app')
+
+    </script>
+</body>
+</html>

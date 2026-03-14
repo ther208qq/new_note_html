@@ -73,11 +73,14 @@
             <a href="#">点击退出</a>
         </div>
 
-
         <form>
             <input type="text" v-model="searchForm.id"/>
+            <input type="text" v-model="searchForm.content"/>
+            <button type="button" @click="insert">添加笔记</button>
+            <button type="button" v-show="searchForm.id" @click="update" style="background-color: orange;">提交修改</button>
             <button type="button" @click="show">展示所有笔记</button>
             <button type="button" @click="clear">清空所有笔记</button>
+
         </form>
 
         <table class="direction">
@@ -93,8 +96,8 @@
                     <td>{{ note.id }}</td>
                     <td>{{ note.content }}</td>
                     <td class="btn-group">
-                        <button class="edit">编辑</button>
-                        <button class="delete">删除</button>
+                        <button class="edit" @click="prepareEdit(note)">编辑</button>
+                        <button class="delete" @click="deleteById(note.id)">删除</button>
                     </td>
                 </tr>
 
@@ -124,19 +127,120 @@
 
             methods:{
 
+                prepareEdit(note){
+                    this.searchForm = {
+                        id:note.id,
+                        content:note.content
+                    }
+                    alert("请在输入框中修改内容，然后点击添加笔记按钮进行修改");
+
+                },
+
+                async update(){
+
+                    if(!this.searchForm.id){
+                        alert("请先选择要修改的笔记");
+                        return;
+                    }
+    
+                    try{
+                        await axios.put(`http://localhost:8080/note/updatebyid`,{
+                            id:this.searchForm.id,
+                            content:this.searchForm.content
+                        });
+
+                        alert("修改成功");
+
+                        this.searchForm = {
+                            id:'',
+                            content:''
+                        }
+
+                        this.show();
+                    } catch (error) {
+                        alert("修改失败");
+                    }
+
+                },
+
+                async deleteById(id){
+
+                    if (!confirm("确定要删除这条笔记吗？")) {
+                        return;
+                    }
+
+                    try{
+                        await axios.delete(`http://localhost:8080/note/deletebyid?id=${id}`);
+
+                        alert("删除成功");  
+
+
+                        this.show();
+                    }catch(Error){
+                        alert("删除失败");
+                    }
+
+
+
+                },
+                
+
+
                 async show(){
     
                     const result = await axios.get(`http://localhost:8080/note/showNote?id=${this.searchForm.id}&content=${this.searchForm.content}`);
                     this.noteList = result.data;
                 },
 
-                clear(){
-                    this.searchForm = {
-                        id:'',
-                        content:''
+                async clear(){
+                    // this.searchForm = {
+                    //     id:'',
+                    //     content:''
+                    // }
+
+                    //删除所有笔记
+
+                    try{
+                        const result = await axios.delete(`http://localhost:8080/note/clear`)
+
+                        this.searchForm = {
+                            id:'',
+                            content:''
+                        }
+
+                        alert("清空成功")
+
+                        this.show();
+                    }catch(Error){
+                        alert("清空失败")
                     }
-                    this.show();
                 },
+
+                async insert(){
+
+                    const content = this.searchForm.content;
+
+                    if(content === ""|content.trim() === ""){
+                        alert("内容不能为空");
+                        return;
+                    }
+
+                    try{
+
+                        await axios.post(`http://localhost:8080/note/insert`,{
+                            content:this.searchForm.content
+                        });
+
+                        // alert("添加成功");
+                        this.searchForm.content='';
+                        this.show();
+
+                    }catch(Error){
+                        alert("添加失败")
+                    }
+
+
+                }
 
             },
             mounted(){
